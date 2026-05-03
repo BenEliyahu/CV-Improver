@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CV Improver — Powered by Claude</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #6c63ff;
+      --accent2: #a78bfa;
+      --success: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --text: #e2e8f0;
+      --muted: #8892b0;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header .tagline { color: var(--muted); font-size: 0.85rem; margin-left: auto; }
+
+    .container { max-width: 1280px; margin: 0 auto; padding: 28px 24px; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent2);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    textarea, input[type=text] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.88rem;
+      padding: 12px 14px;
+      resize: vertical;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    textarea:focus, input[type=text]:focus { outline: none; border-color: var(--accent); }
+
+    textarea.cv-input { height: 380px; line-height: 1.6; }
+
+    .row { margin-bottom: 16px; }
+
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+
+    .option-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .option-toggle:hover { border-color: var(--accent); }
+    .option-toggle.active { border-color: var(--accent); background: rgba(108, 99, 255, 0.12); }
+    .option-toggle .icon { font-size: 1.1rem; }
+    .option-toggle .label-text { font-size: 0.85rem; font-weight: 500; }
+
+    .option-toggle .check {
+      margin-left: auto;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      transition: all 0.15s;
+    }
+
+    .option-toggle.active .check { background: var(--accent); border-color: var(--accent); }
+
+    .fun-fact-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(167,139,250,0.08));
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .fun-fact-toggle .toggle-switch {
+      width: 40px;
+      height: 22px;
+      background: var(--surface2);
+      border-radius: 11px;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .fun-fact-toggle.active .toggle-switch { background: var(--accent); }
+
+    .fun-fact-toggle .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 16px; height: 16px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+
+    .fun-fact-toggle.active .toggle-switch::after { transform: translateX(18px); }
+
+    .fun-fact-text { font-size: 0.88rem; }
+    .fun-fact-text span { color: var(--muted); font-size: 0.8rem; display: block; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #8b5cf6); color: white; }
+    .btn-primary:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 0.82rem;
+      padding: 8px 14px;
+      width: auto;
+    }
+
+    .btn-secondary:hover { border-color: var(--accent2); }
+
+    .analyze-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 7px 14px;
+      width: auto;
+      margin-top: 8px;
+    }
+
+    .analyze-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    .score-bar { display: none; margin-top: 16px; padding: 14px; background: var(--surface2); border-radius: 8px; border: 1px solid var(--border); }
+    .score-bar.visible { display: block; }
+    .score-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .score-num { font-size: 1.5rem; font-weight: 700; }
+    .score-num.low { color: var(--danger); }
+    .score-num.mid { color: var(--warn); }
+    .score-num.high { color: var(--success); }
+    .score-track { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 12px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .score-items { font-size: 0.82rem; }
+    .score-items .item { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 5px; color: var(--muted); }
+    .score-items .item.issue .dot { color: var(--danger); }
+    .score-items .item.strength .dot { color: var(--success); }
+
+    .output-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+    .output-area {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 380px;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      color: var(--text);
+    }
+
+    .output-area.empty { display: flex; align-items: center; justify-content: center; color: var(--muted); font-style: italic; }
+
+    .fun-fact-section {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(167,139,250,0.1));
+      border: 1px solid rgba(108,99,255,0.35);
+      border-radius: 8px;
+      display: none;
+    }
+
+    .fun-fact-section.visible { display: block; }
+    .fun-fact-section h3 { font-size: 0.8rem; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .fun-fact-section p { font-size: 0.9rem; line-height: 1.6; }
+
+    .cursor {
+      display: inline-block;
+      width: 2px; height: 1em;
+      background: var(--accent);
+      animation: blink 0.8s infinite;
+      vertical-align: text-bottom;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s;
+      z-index: 100;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); color: var(--accent2); background: rgba(108,99,255,0.06); }
+    .upload-zone.done { border-color: var(--success); color: var(--success); background: rgba(52,211,153,0.06); }
+    .upload-zone.loading { opacity: 0.6; cursor: not-allowed; }
+
+    .or-divider {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .job-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .job-url-row { display: none; gap: 8px; margin-top: 8px; }
+    .job-url-row.visible { display: flex; }
+    .job-url-row input { flex: 1; }
+    .btn-fetch { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 14px; font-size: 0.82rem; cursor: pointer; white-space: nowrap; font-weight: 500; transition: border-color 0.2s; }
+    .btn-fetch:hover { border-color: var(--accent2); }
+    .btn-fetch:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-job-active { border-color: var(--accent) !important; color: var(--accent2) !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦ CV Improver</div>
+  <div class="tagline">Powered by Claude AI</div>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>📄 Your CV</h2>
+        <input type="file" id="cvFile" accept=".pdf,.docx" style="display:none" onchange="uploadCVFile(this.files[0])">
+        <div class="upload-zone" id="cvUploadZone"
+          onclick="document.getElementById('cvFile').click()"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleCVDrop(event)">
+          <span id="cvUploadText">📎 Upload PDF or DOCX — or drop file here</span>
+        </div>
+        <div class="or-divider">— or paste below —</div>
+        <div class="row">
+          <textarea class="cv-input" id="cvInput" placeholder="Paste your CV here..."></textarea>
+        </div>
+        <button class="btn analyze-btn" id="analyzeBtn" onclick="analyzeCV()">Quick ATS Analysis</button>
+        <div class="score-bar" id="scoreBar"></div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Target Job</h2>
+        <div class="row">
+          <label>Job Title</label>
+          <input type="text" id="jobTitle" placeholder="e.g. Senior Product Manager" />
+        </div>
+        <div class="row">
+          <label>Job Description (optional)</label>
+          <textarea id="jobDesc" style="height:100px" placeholder="Paste key requirements from the job posting..."></textarea>
+          <div class="job-actions">
+            <button class="btn-fetch" id="btnFetchURL" onclick="toggleJobURL()">🔗 Fetch from URL</button>
+            <button class="btn-fetch" id="btnScreenshot" onclick="document.getElementById('jobImage').click()">📸 From screenshot</button>
+            <input type="file" id="jobImage" accept="image/*" style="display:none" onchange="uploadJobImage(this.files[0])">
+          </div>
+          <div class="job-url-row" id="jobUrlRow">
+            <input type="text" id="jobUrlInput" placeholder="https://linkedin.com/jobs/..." />
+            <button class="btn-fetch" id="btnGoFetch" onclick="fetchJobFromURL()">→ Fetch</button>
+          </div>
+        </div>
+
+        <hr class="divider"/>
+
+        <h2>⚙️ Improvement Options</h2>
+        <div class="options-grid">
+          <div class="option-toggle active" data-key="phrasing" onclick="toggleOption(this)">
+            <span class="icon">✍️</span>
+            <span class="label-text">Better Phrasing</span>
+            <div class="check"></div>
+          </div>
+          <div class="option-toggle active" data-key="ats" onclick="toggleOption(this)">
+            <span class="icon">🤖</span>
+            <span class="label-text">ATS Optimize</span>
+            <div class="check"></div>
+          </div>
+          <div class="option-toggle active" data-key="buzzwords" onclick="toggleOption(this)">
+            <span class="icon">🔑</span>
+            <span class="label-text">Add Buzzwords</span>
+            <div class="check"></div>
+          </div>
+          <div class="option-toggle active" data-key="achievements" onclick="toggleOption(this)">
+            <span class="icon">📈</span>
+            <span class="label-text">Impact Metrics</span>
+            <div class="check"></div>
+          </div>
+        </div>
+
+        <div class="fun-fact-toggle" id="funFactToggle" onclick="toggleFunFact()">
+          <div class="toggle-switch"></div>
+          <div class="fun-fact-text">
+            ✨ Add "Something Interesting About Me"
+            <span>Generate a memorable human touch based on your CV</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="improveBtn" onclick="improveCV()">
+          <span id="btnText">Improve My CV</span>
+          <div class="spinner" id="spinner" style="display:none"></div>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="height:100%">
+        <div class="output-header">
+          <h2 style="margin-bottom:0">✨ Improved CV</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="downloadOutput('pdf')"  id="dlPdf"  style="display:none">⬇ PDF</button>
+            <button class="btn btn-secondary" onclick="downloadOutput('docx')" id="dlDocx" style="display:none">⬇ DOCX</button>
+            <button class="btn btn-secondary" onclick="copyOutput()" id="copyBtn" style="display:none">Copy</button>
+            <button class="btn btn-secondary" onclick="clearOutput()" id="clearBtn" style="display:none">Clear</button>
+          </div>
+        </div>
+        <div class="output-area empty" id="outputArea">Your improved CV will appear here...</div>
+        <div class="fun-fact-section" id="funFactOutput">
+          <h3>✨ Something Interesting About You</h3>
+          <p id="funFactText"></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const options = { phrasing: true, ats: true, buzzwords: true, achievements: true };
+  let funFactEnabled = false;
+  let isStreaming = false;
+
+  function toggleOption(el) {
+    const key = el.dataset.key;
+    options[key] = !options[key];
+    el.classList.toggle('active', options[key]);
+  }
+
+  function toggleFunFact() {
+    funFactEnabled = !funFactEnabled;
+    document.getElementById('funFactToggle').classList.toggle('active', funFactEnabled);
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function setLoading(on) {
+    isStreaming = on;
+    document.getElementById('improveBtn').disabled = on;
+    document.getElementById('spinner').style.display = on ? 'block' : 'none';
+    document.getElementById('btnText').textContent = on ? 'Improving...' : 'Improve My CV';
+  }
+
+  function clearOutput() {
+    const area = document.getElementById('outputArea');
+    area.className = 'output-area empty';
+    area.textContent = 'Your improved CV will appear here...';
+    document.getElementById('funFactOutput').classList.remove('visible');
+    ['copyBtn','clearBtn','dlPdf','dlDocx'].forEach(id => document.getElementById(id).style.display = 'none');
+  }
+
+  async function downloadOutput(format) {
+    const text = document.getElementById('outputArea').textContent;
+    if (!text || text === 'Your improved CV will appear here...') return;
+    const btn = document.getElementById(format === 'pdf' ? 'dlPdf' : 'dlDocx');
+    const orig = btn.textContent;
+    btn.textContent = '⏳';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, format })
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `improved-cv.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) { showToast('Download failed'); }
+    finally { btn.textContent = orig; btn.disabled = false; }
+  }
+
+  async function copyOutput() {
+    await navigator.clipboard.writeText(document.getElementById('outputArea').textContent);
+    showToast('Copied to clipboard!');
+  }
+
+  async function analyzeCV() {
+    const cv = document.getElementById('cvInput').value.trim();
+    if (!cv) { showToast('Paste your CV first'); return; }
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+    try {
+      const res = await fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cv, job_title: document.getElementById('jobTitle').value })
+      });
+      renderScore(await res.json());
+    } catch (e) { showToast('Analysis failed'); }
+    finally { btn.disabled = false; btn.textContent = 'Quick ATS Analysis'; }
+  }
+
+  function renderScore(data) {
+    const score = data.ats_score || 0;
+    const cls = score < 40 ? 'low' : score < 70 ? 'mid' : 'high';
+    const color = cls === 'low' ? '#f87171' : cls === 'mid' ? '#fbbf24' : '#34d399';
+    const bar = document.getElementById('scoreBar');
+    bar.innerHTML = `
+      <div class="score-header">
+        <div>
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:2px">ATS Score</div>
+          <div class="score-num ${cls}">${score}<span style="font-size:1rem;color:var(--muted)">/100</span></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted);text-align:right">
+          ${cls === 'low' ? '⚠️ Needs work' : cls === 'mid' ? '✔️ Decent' : '🎉 Strong'}
+        </div>
+      </div>
+      <div class="score-track"><div class="score-fill" style="width:${score}%;background:${color}"></div></div>
+      <div class="score-items">
+        ${(data.top_issues||[]).map(i=>`<div class="item issue"><span class="dot">✗</span> ${i}</div>`).join('')}
+        ${(data.strengths||[]).map(s=>`<div class="item strength"><span class="dot">✓</span> ${s}</div>`).join('')}
+      </div>`;
+    bar.classList.add('visible');
+  }
+
+  // ── CV file upload ──────────────────────────────────────
+  async function uploadCVFile(file) {
+    if (!file) return;
+    const zone = document.getElementById('cvUploadZone');
+    zone.classList.add('loading');
+    document.getElementById('cvUploadText').textContent = '⏳ Extracting text…';
+    const fd = new FormData();
+    fd.append('cv', file);
+    try {
+      const res = await fetch('/parse-cv', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) { showToast('❌ ' + data.error); zone.classList.remove('loading'); document.getElementById('cvUploadText').textContent = '📎 Upload PDF or DOCX — or drop file here'; return; }
+      document.getElementById('cvInput').value = data.text;
+      zone.classList.remove('loading');
+      zone.classList.add('done');
+      document.getElementById('cvUploadText').textContent = '✅ ' + file.name;
+    } catch (e) {
+      showToast('Upload failed');
+      zone.classList.remove('loading');
+      document.getElementById('cvUploadText').textContent = '📎 Upload PDF or DOCX — or drop file here';
+    }
+    document.getElementById('cvFile').value = '';
+  }
+
+  function handleCVDrop(e) {
+    e.preventDefault();
+    document.getElementById('cvUploadZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) uploadCVFile(file);
+  }
+
+  // ── Job URL fetch ────────────────────────────────────────
+  function toggleJobURL() {
+    const row = document.getElementById('jobUrlRow');
+    const btn = document.getElementById('btnFetchURL');
+    const visible = row.classList.toggle('visible');
+    btn.classList.toggle('btn-job-active', visible);
+    if (visible) document.getElementById('jobUrlInput').focus();
+  }
+
+  async function fetchJobFromURL() {
+    const url = document.getElementById('jobUrlInput').value.trim();
+    if (!url) { showToast('Enter a URL first'); return; }
+    const btn = document.getElementById('btnGoFetch');
+    btn.disabled = true;
+    btn.textContent = '⏳ Fetching…';
+    const controller = new AbortController();
+    const clientTimeout = setTimeout(() => controller.abort(), 18000);
+    try {
+      const res = await fetch('/fetch-job', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+        signal: controller.signal
+      });
+      clearTimeout(clientTimeout);
+      const data = await res.json();
+      if (data.error) { showToast('❌ ' + data.error); return; }
+      if (data.title) document.getElementById('jobTitle').value = data.title;
+      if (data.description) document.getElementById('jobDesc').value = data.description;
+      document.getElementById('jobUrlRow').classList.remove('visible');
+      document.getElementById('btnFetchURL').classList.remove('btn-job-active');
+      showToast('✅ Job description fetched');
+    } catch (e) {
+      clearTimeout(clientTimeout);
+      showToast(e.name === 'AbortError' ? '⏱ Timeout — paste the description manually' : '❌ ' + e.message);
+    } finally { btn.disabled = false; btn.textContent = '→ Fetch'; }
+  }
+
+  // ── Job screenshot ───────────────────────────────────────
+  async function uploadJobImage(file) {
+    if (!file) return;
+    const btn = document.getElementById('btnScreenshot');
+    btn.disabled = true;
+    btn.classList.add('btn-job-active');
+    btn.textContent = '⏳ Reading…';
+    const fd = new FormData();
+    fd.append('image', file);
+    try {
+      const res = await fetch('/parse-job-image', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.error) { showToast('❌ ' + data.error); return; }
+      document.getElementById('jobDesc').value = data.text;
+      showToast('✅ Job extracted from screenshot');
+    } catch (e) { showToast('Image upload failed'); }
+    finally { btn.disabled = false; btn.classList.remove('btn-job-active'); btn.textContent = '📸 From screenshot'; document.getElementById('jobImage').value = ''; }
+  }
+
+  async function improveCV() {
+    if (isStreaming) return;
+    const cv = document.getElementById('cvInput').value.trim();
+    if (!cv) { showToast('Paste your CV first'); return; }
+
+    const outputArea = document.getElementById('outputArea');
+    outputArea.className = 'output-area';
+    outputArea.textContent = '';
+    document.getElementById('funFactOutput').classList.remove('visible');
+    document.getElementById('copyBtn').style.display = 'none';
+    document.getElementById('clearBtn').style.display = 'none';
+    setLoading(true);
+
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    outputArea.appendChild(cursor);
+
+    let fullText = '';
+    let funFactMode = false;
+
+    try {
+      const res = await fetch('/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cv,
+          job_title: document.getElementById('jobTitle').value,
+          job_description: document.getElementById('jobDesc').value,
+          options,
+          include_fun_fact: funFactEnabled
+        })
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const line of decoder.decode(value).split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = line.slice(6);
+          if (payload === '[DONE]') break;
+          try {
+            const { chunk } = JSON.parse(payload);
+            if (!chunk) continue;
+            fullText += chunk;
+
+            if (funFactEnabled && fullText.includes('=== INTERESTING FACT ===')) {
+              const [cvPart, factPart] = fullText.split('=== INTERESTING FACT ===');
+              outputArea.textContent = cvPart.trim();
+              outputArea.appendChild(cursor);
+              document.getElementById('funFactText').textContent = (factPart || '').trim();
+              document.getElementById('funFactOutput').classList.add('visible');
+              funFactMode = true;
+            } else if (!funFactMode) {
+              outputArea.textContent = fullText;
+              outputArea.appendChild(cursor);
+            } else {
+              const factPart = fullText.split('=== INTERESTING FACT ===')[1] || '';
+              document.getElementById('funFactText').textContent = factPart.trim();
+            }
+            outputArea.scrollTop = outputArea.scrollHeight;
+          } catch (_) {}
+        }
+      }
+    } catch (e) {
+      outputArea.textContent = 'Error: ' + e.message;
+    } finally {
+      cursor.remove();
+      setLoading(false);
+      ['copyBtn','clearBtn','dlPdf','dlDocx'].forEach(id => document.getElementById(id).style.display = 'block');
+    }
+  }
+</script>
+</body>
+</html>
